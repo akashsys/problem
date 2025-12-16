@@ -1,0 +1,13 @@
+<testsuites name="results">
+  <testsuite name="all" package="all">
+    <property name="random_seed" value="1765893338" />
+    <testcase name="test_add" classname="test_alu_hidden" file="C:\Users\AKASH NAGARIA\Desktop\problem\tests\test_alu_hidden.py" lineno="30" time="0.008447885513305664" sim_time_ns="70.0" ratio_time="8286.097141083172" />
+    <testcase name="test_sub" classname="test_alu_hidden" file="C:\Users\AKASH NAGARIA\Desktop\problem\tests\test_alu_hidden.py" lineno="48" time="0.002137899398803711" sim_time_ns="70.0" ratio_time="32742.419984387197" />
+    <testcase name="test_and" classname="test_alu_hidden" file="C:\Users\AKASH NAGARIA\Desktop\problem\tests\test_alu_hidden.py" lineno="66" time="0.0" sim_time_ns="70.0" ratio_time="inf" />
+    <testcase name="test_or" classname="test_alu_hidden" file="C:\Users\AKASH NAGARIA\Desktop\problem\tests\test_alu_hidden.py" lineno="83" time="0.0017349720001220703" sim_time_ns="70.0" ratio_time="40346.47244743713" />
+    <testcase name="test_xor" classname="test_alu_hidden" file="C:\Users\AKASH NAGARIA\Desktop\problem\tests\test_alu_hidden.py" lineno="100" time="0.0020208358764648438" sim_time_ns="70.0" ratio_time="34639.13166588013" />
+    <testcase name="test_sll" classname="test_alu_hidden" file="C:\Users\AKASH NAGARIA\Desktop\problem\tests\test_alu_hidden.py" lineno="117" time="0.002254486083984375" sim_time_ns="70.0" ratio_time="31049.204737732656" />
+    <testcase name="test_mul" classname="test_alu_hidden" file="C:\Users\AKASH NAGARIA\Desktop\problem\tests\test_alu_hidden.py" lineno="138" time="0.0019192695617675781" sim_time_ns="250.0" ratio_time="130257.88819875776" />
+    <testcase name="test_div" classname="test_alu_hidden" file="C:\Users\AKASH NAGARIA\Desktop\problem\tests\test_alu_hidden.py" lineno="158" time="0.005278825759887695" sim_time_ns="350.0" ratio_time="66302.6240910528" />
+  </testsuite>
+</testsuites>
