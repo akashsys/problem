@@ -81,10 +81,11 @@ module top (
 
     // Intentionally broken logic
     always @(posedge clk or negedge rst_n) begin
-        if (!rst_n)
-            result <= 16'd0;
-        else
-            result <= result; // BUG: result never updates
-    end
+    if (!rst_n)
+        result <= 16'd0;
+    else if (result_valid)
+        result <= aon_data;
+end
+
 
 endmodule
