@@ -1,0 +1,100 @@
+You are given an RTL design for a 16-bit Arithmetic Logic Unit (ALU) integrated
+into a low-power system. The design includes power-intent related control signals
+but the ALU RTL is intentionally incomplete and contains functional and
+power-management bugs.
+
+Your task is to complete and correct the ALU RTL so that it behaves exactly as
+specified and passes all verification tests.
+
+DESIGN OVERVIEW
+---------------
+The system consists of:
+1. A top-level module that instantiates:
+- An always-on (AON) block
+- A power-gated ALU block
+2. The ALU supports both single-cycle and multi-cycle operations.
+3. Power-intent signals are modeled at RTL level to mimic real low-power design
+behavior.
+
+ALU FUNCTIONALITY
+-----------------
+The ALU operates on two 16-bit operands A and B and supports the following
+operations selected by a 4-bit opcode:
+
+Single-cycle operations:
+- ADD : opcode 4'b0000 → A + B
+- SUB : opcode 4'b0001 → A - B
+- AND : opcode 4'b0010 → A & B
+- OR : opcode 4'b0011 → A | B
+- XOR : opcode 4'b0100 → A ^ B
+- NOR : opcode 4'b0101 → ~(A | B)
+- SLL : opcode 4'b0110 → A << B[3:0]
+- SLL : opcode 4'b0111 → A << B[3:0]
+
+Multi-cycle operations:
+- MUL : opcode 4'b1000 → A * B (requires multiple cycles)
+- DIV : opcode 4'b1001 → A / B (requires multiple cycles)
+
+The ALU uses an internal FSM to manage multi-cycle operations.
+
+POWER-INTENT SIGNALS
+--------------------
+The ALU includes the following power-related control signals:
+
+- alu_pwr_en:
+Indicates whether the ALU is powered ON.
+When LOW:
+- The ALU must not start new operations.
+- Internal state must not advance.
+- Outputs must not glitch or become invalid.
+
+- iso_en:
+Controls output isolation.
+When HIGH:
+- All externally visible ALU outputs must be forced to a safe value (0).
+
+- save / restore:
+Represent state-retention intent.
+These signals are present but simplified at RTL level.
+
+KNOWN ISSUES IN THE INCOMPLETE DESIGN
+-------------------------------------
+The provided ALU RTL is incomplete and incorrect in several ways:
+
+1. Power gating behavior is partially implemented or missing.
+2. FSM state and cycle counters may advance incorrectly during power-off.
+3. Output isolation may exist internally but not affect final outputs.
+4. Multi-cycle operations may produce invalid results if power is disabled
+mid-execution.
+5. Result_valid and busy signaling may glitch or assert incorrectly.
+
+YOUR TASK
+---------
+Modify ONLY the ALU RTL to fix all functional and power-related issues. Pick the incomplete file from sources/top.v. 
+
+You must ensure:
+- Correct functional results for all opcodes.
+- Clean handling of power enable / disable events.
+- No spurious outputs during isolation.
+- Deterministic behavior across power transitions.
+- Multi-cycle operations complete correctly or are safely aborted.
+
+CONSTRAINTS
+-----------
+- Do NOT modify module interfaces.
+- Do NOT add or remove ports.
+- Do NOT change testbench files.
+- Do NOT remove power-intent signals.
+- Do NOT use non-synthesizable constructs.
+
+GRADING
+-------
+Your solution will be evaluated using hidden tests that:
+- Compare outputs against a golden reference implementation.
+- Toggle power and isolation signals at different times.
+- Stress multi-cycle operation boundaries.
+
+DELIVERABLE
+-----------
+A corrected ALU RTL implementation that matches the specified behavior and
+passes all hidden tests
