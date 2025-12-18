@@ -41,7 +41,6 @@ module top (
         .busy(busy)
     );
 
-
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n)
             saved_result <= 16'd0;
