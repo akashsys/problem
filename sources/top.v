@@ -1,3 +1,7 @@
+// ============================================================================
+// 16-bit Low Power ALU (FINAL VERSION - No Flags, Direct Output, Multi-cycle)
+// MUL = 4 cycles, DIV = 8 cycles
+// ============================================================================
 `timescale 1ns/1ps
 module alu (
     input         clk,
@@ -225,7 +229,7 @@ module top (
     );
 
     // -------------------------------------------------------------------------
-    // SAVE REGISTER
+    // SAVE REGISTER (BUG #1: save not qualified with result_valid)
     // -------------------------------------------------------------------------
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n)
@@ -236,7 +240,7 @@ module top (
 
     // -------------------------------------------------------------------------
     // ISOLATION / RESTORE LOGIC
-    // 
+    // BUG #2 (HIDDEN): restore priority is wrong
     // -------------------------------------------------------------------------
     always @(*) begin
         if (restore)
