@@ -1,7 +1,3 @@
-// ============================================================================
-// 16-bit Low Power ALU (FINAL VERSION - No Flags, Direct Output, Multi-cycle)
-// MUL = 4 cycles, DIV = 8 cycles
-// ============================================================================
 `timescale 1ns/1ps
 module alu (
     input         clk,
@@ -120,7 +116,7 @@ module alu (
                 4'b0100: result <= A ^ B;          // XOR
                 4'b0101: result <= ~(A | B);       // NOR
                 4'b0110: result <= A << B[3:0];    // SLL
-                4'b0111: result <= A << B[3:0];    // SLL
+                4'b0111: result <= A << B[3:0];    // (Was SRA, replaced with SLL as requested)
 
                 // Multi-cycle operations (final cycle)
                 4'b1000: result <= A * B;                    // MUL
@@ -131,7 +127,7 @@ module alu (
     end
 
     // =========================================================================
-    // Isolation logic rewritten WITHOUT ternary operator
+    // Isolation logic
     // =========================================================================
     reg [15:0] result_iso;
 
@@ -166,37 +162,25 @@ module aon_block (
 
 endmodule
 
-
-
-
-
-
-
 // ============================================================================
-// TOP MODULE (BUGGY)
+// TOP MODULE
+// Connects ALU (PD_ALU) and AON Block (PD_AON)
 // ============================================================================
 
 module top (
     input         clk,
     input         rst_n,
-
-    // ALU input controls
     input  [15:0] A,
     input  [15:0] B,
     input  [3:0]  opcode,
     input         start,
-
-    // Power control
     input         alu_pwr_en,
     input         iso_en,
     input         save,
     input         restore,
-
-    // Final output (VISIBLE to cocotb)
     output [15:0] result
 );
 
-    // Internal signals
     wire [15:0] alu_result;
     wire        result_valid;
     wire        busy;
@@ -206,9 +190,6 @@ module top (
 
     wire [15:0] data_out;
 
-    // -------------------------------------------------------------------------
-    // ALU Instance
-    // -------------------------------------------------------------------------
     alu u_alu (
         .clk(clk),
         .rst_n(rst_n),
@@ -228,23 +209,17 @@ module top (
         .busy(busy)
     );
 
-    // -------------------------------------------------------------------------
-    // SAVE REGISTER (BUG #1: save not qualified with result_valid)
-    // -------------------------------------------------------------------------
+
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n)
             saved_result <= 16'd0;
         else if (save)
-            saved_result <= alu_result;   // BUG
+            saved_result <= alu_result;  
     end
-
-    // -------------------------------------------------------------------------
-    // ISOLATION / RESTORE LOGIC
-    // BUG #2 (HIDDEN): restore priority is wrong
-    // -------------------------------------------------------------------------
+-
     always @(*) begin
         if (restore)
-            alu_to_aon = saved_result;     // BUG
+            alu_to_aon = saved_result;
         else if (iso_en)
             alu_to_aon = saved_result;
         else if (!alu_pwr_en)
@@ -253,9 +228,6 @@ module top (
             alu_to_aon = alu_result;
     end
 
-    // -------------------------------------------------------------------------
-    // AON Block
-    // -------------------------------------------------------------------------
     aon_block u_aon (
         .clk(clk),
         .rst_n(rst_n),
@@ -263,7 +235,6 @@ module top (
         .data_out(data_out)
     );
 
-    // Final output
     assign result = data_out;
 
 endmodule
