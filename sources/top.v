@@ -69,4 +69,3 @@ module top (
     assign result = data_out;
 
 endmodule
-
