@@ -188,17 +188,19 @@ def test_alu_runner():
     proj_path = Path(__file__).resolve().parent.parent
 
     sources = [
+        proj_path / "sources" / "alu.v",
+        proj_path / "sources" / "aon_block.v",
         proj_path / "sources" / "top.v"
     ]
 
     runner = get_runner(sim)
+
     runner.build(
         sources=sources,
         hdl_toplevel="top",
-        always=True,
     )
 
     runner.test(
         hdl_toplevel="top",
-        test_module="test_alu_hidden"
+        test_module="tests.test_alu_hidden"
     )
