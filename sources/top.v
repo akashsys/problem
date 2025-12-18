@@ -47,7 +47,7 @@ module top (
         else if (save)
             saved_result <= alu_result;  
     end
--
+
     always @(*) begin
         if (restore)
             alu_to_aon = saved_result;
