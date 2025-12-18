@@ -25,17 +25,14 @@ module top (
     alu u_alu (
         .clk(clk),
         .rst_n(rst_n),
-
         .alu_pwr_en(alu_pwr_en),
         .iso_en(iso_en),
         .save(save),
         .restore(restore),
-
         .A(A),
         .B(B),
         .opcode(opcode),
         .start(start),
-
         .result(alu_result),
         .result_valid(result_valid),
         .busy(busy)
@@ -44,16 +41,14 @@ module top (
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n)
             saved_result <= 16'd0;
-        else if (save)
-            saved_result <= alu_result;  
+        else if (save && result_valid)
+            saved_result <= alu_result;
     end
 
     always @(*) begin
-        if (restore)
+        if (iso_en || !alu_pwr_en)
             alu_to_aon = saved_result;
-        else if (iso_en)
-            alu_to_aon = saved_result;
-        else if (!alu_pwr_en)
+        else if (restore)
             alu_to_aon = saved_result;
         else
             alu_to_aon = alu_result;
@@ -69,3 +64,4 @@ module top (
     assign result = data_out;
 
 endmodule
+
