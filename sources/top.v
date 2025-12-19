@@ -48,6 +48,3 @@ always @(*) begin
 end
 
 endmodule
-
-
-
