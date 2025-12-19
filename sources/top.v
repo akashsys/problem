@@ -19,7 +19,8 @@ module top (
     wire        busy;
 
     // Clamp value
-    localparam [15:0] clamp_value = 16'd1;
+    wire [15:0] clamp_value;
+    assign clamp_value = 16'd1;
 
     // ALU instance
     alu u_alu (
@@ -36,14 +37,17 @@ module top (
     );
 
     // Power / isolation aware output logic (GOLDEN)
-    always @(*) begin
+       always @(*) begin
         if (!rst_n)
+            result = 16'd0;
+        else if (iso_en)
             result = clamp_value;
-        else if (iso_en || !alu_pwr_en)
+        else if (!alu_pwr_en)
             result = clamp_value;
         else
             result = alu_result;
     end
+
 
 endmodule
 
