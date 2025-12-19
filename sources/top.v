@@ -20,7 +20,7 @@ module top (
 
     // Clamp value
     wire [15:0] clamp_value;
-    assign clamp_value = 16'd1;
+    //assign clamp_value = 16'd1;
 
     // ALU instance
     alu u_alu (
