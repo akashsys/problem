@@ -37,15 +37,15 @@ module top (
     );
 
     // Power / isolation aware output logic (GOLDEN)
-       always @(*) begin
+       always @(posedge clk or negedge rst_n) begin
         if (!rst_n)
-            result = 16'd0;
+            result <= 16'd0;
         else if (iso_en)
-            result = clamp_value;
+            result <= clamp_value;
         else if (!alu_pwr_en)
-            result = clamp_value;
+            result <= clamp_value;
         else
-            result = alu_result;
+            result <= alu_result;
     end
 
 
