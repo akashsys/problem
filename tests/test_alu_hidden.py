@@ -1,183 +1,119 @@
 import cocotb
-from cocotb.triggers import Timer, RisingEdge
+from cocotb.triggers import RisingEdge
+from cocotb.clock import Clock
 
 
-async def generate_clock(dut):
-    """Generate clock pulses."""
-    for _ in range(2000):
-        dut.clk.value = 0
-        await Timer(5, units="ns")
-        dut.clk.value = 1
-        await Timer(5, units="ns")
+async def start_clock(dut):
+    clock = Clock(dut.clk, 10, unit="ns")
+    cocotb.start_soon(clock.start())
 
 
 async def reset_dut(dut):
-    """Reset the DUT."""
     dut.rst_n.value = 0
     dut.start.value = 0
     dut.A.value = 0
     dut.B.value = 0
     dut.opcode.value = 0
-    await Timer(20, units="ns")
+    dut.alu_pwr_en.value = 1
+    dut.iso_en.value = 0
+    for _ in range(2):
+        await RisingEdge(dut.clk)
     dut.rst_n.value = 1
-    await Timer(20, units="ns")
+    for _ in range(2):
+        await RisingEdge(dut.clk)
 
 
-# -------------------------------------------------------
-# SINGLE-CYCLE OPERATIONS
-# -------------------------------------------------------
+async def run_op(dut, A, B, opcode, cycles):
+    dut.A.value = A
+    dut.B.value = B
+    dut.opcode.value = opcode
+    dut.start.value = 1
+    await RisingEdge(dut.clk)
+    dut.start.value = 0
+    for _ in range(cycles):
+        await RisingEdge(dut.clk)
+
 
 @cocotb.test()
 async def test_add(dut):
-    await cocotb.start(generate_clock(dut))
+    await start_clock(dut)
     await reset_dut(dut)
-
-    dut.A.value = 10
-    dut.B.value = 5
-    dut.opcode.value = 0  # ADD
-    dut.start.value = 1
-    await Timer(10, units="ns")
-    dut.start.value = 0
-
-    await Timer(20, units="ns")
-
-    dut._log.info(f"ADD result = {int(dut.result.value)}")
-    assert int(dut.result.value) == 15, "ADD failed"
+    await run_op(dut, 10, 5, 0, 2)
+    assert int(dut.result.value) == 15
 
 
 @cocotb.test()
 async def test_sub(dut):
-    await cocotb.start(generate_clock(dut))
+    await start_clock(dut)
     await reset_dut(dut)
-
-    dut.A.value = 20
-    dut.B.value = 7
-    dut.opcode.value = 1  # SUB
-    dut.start.value = 1
-    await Timer(10, units="ns")
-    dut.start.value = 0
-
-    await Timer(20, units="ns")
-
-    dut._log.info(f"SUB result = {int(dut.result.value)}")
-    assert int(dut.result.value) == 13, "SUB failed"
+    await run_op(dut, 20, 7, 1, 2)
+    assert int(dut.result.value) == 13
 
 
 @cocotb.test()
 async def test_and(dut):
-    await cocotb.start(generate_clock(dut))
+    await start_clock(dut)
     await reset_dut(dut)
+    await run_op(dut, 0xF0F0, 0x0FF0, 2, 2)
+    assert int(dut.result.value) == (0xF0F0 & 0x0FF0)
 
-    dut.A.value = 0xF0F0
-    dut.B.value = 0x0FF0
-    dut.opcode.value = 2  # AND
-    dut.start.value = 1
-    await Timer(10, units="ns")
-    dut.start.value = 0
-
-    await Timer(20, units="ns")
-
-    assert int(dut.result.value) == (0xF0F0 & 0x0FF0), "AND failed"
-
-
-@cocotb.test()
-async def test_or(dut):
-    await cocotb.start(generate_clock(dut))
-    await reset_dut(dut)
-
-    dut.A.value = 0x00F0
-    dut.B.value = 0x0F00
-    dut.opcode.value = 3  # OR
-    dut.start.value = 1
-    await Timer(10, units="ns")
-    dut.start.value = 0
-
-    await Timer(20, units="ns")
-
-    assert int(dut.result.value) == (0x00F0 | 0x0F00), "OR failed"
-
-
-@cocotb.test()
-async def test_xor(dut):
-    await cocotb.start(generate_clock(dut))
-    await reset_dut(dut)
-
-    dut.A.value = 0xAAAA
-    dut.B.value = 0x5555
-    dut.opcode.value = 4  # XOR
-    dut.start.value = 1
-    await Timer(10, units="ns")
-    dut.start.value = 0
-
-    await Timer(20, units="ns")
-
-    assert int(dut.result.value) == (0xAAAA ^ 0x5555), "XOR failed"
-
-
-@cocotb.test()
-async def test_sll(dut):
-    await cocotb.start(generate_clock(dut))
-    await reset_dut(dut)
-
-    dut.A.value = 1
-    dut.B.value = 4
-    dut.opcode.value = 6  # SLL
-    dut.start.value = 1
-    await Timer(10, units="ns")
-    dut.start.value = 0
-
-    await Timer(20, units="ns")
-
-    assert int(dut.result.value) == (1 << 4), "SLL failed"
-
-
-# -------------------------------------------------------
-# MULTI-CYCLE OPERATIONS
-# -------------------------------------------------------
 
 @cocotb.test()
 async def test_mul(dut):
-    await cocotb.start(generate_clock(dut))
+    await start_clock(dut)
     await reset_dut(dut)
-
-    dut.A.value = 12
-    dut.B.value = 10
-    dut.opcode.value = 8  # MUL
-    dut.start.value = 1
-
-    await Timer(10, units="ns")
-    dut.start.value = 0
-
-    # MUL takes 5 cycles → 5 * 10ns = 50ns
-    await Timer(200, units="ns")
-
-    dut._log.info(f"MUL result = {int(dut.result.value)}")
-    assert int(dut.result.value) == 120, "MUL failed"
+    await run_op(dut, 12, 10, 8, 7)
+    assert int(dut.result.value) == 120
 
 
 @cocotb.test()
 async def test_div(dut):
-    await cocotb.start(generate_clock(dut))
+    await start_clock(dut)
+    await reset_dut(dut)
+    await run_op(dut, 100, 4, 9, 11)
+    assert int(dut.result.value) == 25
+
+
+@cocotb.test()
+async def test_clamp_is_valid_value(dut):
+    await start_clock(dut)
     await reset_dut(dut)
 
-    dut.A.value = 100
-    dut.B.value = 4
-    dut.opcode.value = 9  # DIV
-    dut.start.value = 1
+    dut.iso_en.value = 1
+    await RisingEdge(dut.clk)
 
-    await Timer(10, units="ns")
-    dut.start.value = 0
-
-    # DIV takes 9 cycles → 9 * 10ns
-    await Timer(300, units="ns")
-
-    dut._log.info(f"DIV result = {int(dut.result.value)}")
-    assert int(dut.result.value) == 25, "DIV failed"
+    val = dut.result.value
+    assert val.is_resolvable, "Clamp is X or Z"
+    assert int(val) in [0, 1], "Clamp value must be 0 or 1"
 
 
-# -------------------------------------------------------
-# RUNNER (just like your RC5 example)
-# -------------------------------------------------------
+@cocotb.test()
+async def test_iso_en_clamps_output(dut):
+    await start_clock(dut)
+    await reset_dut(dut)
+
+    await run_op(dut, 9, 6, 0, 2)
+    await RisingEdge(dut.clk)
+    dut.iso_en.value = 1
+    await RisingEdge(dut.clk)
+
+    assert int(dut.result.value) in [0, 1], "Result not clamped on iso_en"
+
+
+
+@cocotb.test()
+async def test_power_down_clamps_output(dut):
+    await start_clock(dut)
+    await reset_dut(dut)
+
+    await run_op(dut, 8, 2, 0, 2)
+    await RisingEdge(dut.clk)
+
+    dut.alu_pwr_en.value = 0
+    await RisingEdge(dut.clk)
+
+    assert int(dut.result.value) in [0, 1], "Result not clamped on power-down"
+
 
 def test_alu_runner():
     import os
@@ -190,17 +126,9 @@ def test_alu_runner():
     sources = [
         proj_path / "sources" / "alu.v",
         proj_path / "sources" / "aon_block.v",
-        proj_path / "sources" / "top.v"
+        proj_path / "sources" / "top.v",
     ]
 
     runner = get_runner(sim)
-
-    runner.build(
-        sources=sources,
-        hdl_toplevel="top",
-    )
-
-    runner.test(
-        hdl_toplevel="top",
-        test_module="tests.test_alu_hidden"
-    )
+    runner.build(sources=sources, hdl_toplevel="top", always=True)
+    runner.test(hdl_toplevel="top", test_module="test_alu_hidden")

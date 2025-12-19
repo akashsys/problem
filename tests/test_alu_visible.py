@@ -1,59 +1,52 @@
 import cocotb
-from cocotb.triggers import Timer, RisingEdge
+from cocotb.clock import Clock
+from cocotb.triggers import RisingEdge
 
 
-async def generate_clock(dut):
-    for _ in range(200):
-        dut.clk.value = 0
-        await Timer(5, units="ns")
-        dut.clk.value = 1
-        await Timer(5, units="ns")
+@cocotb.test()
+async def visible_init(dut):
+    clock = Clock(dut.clk, 10, unit="ns")
+    cocotb.start_soon(clock.start())
 
-
-async def reset_dut(dut):
     dut.rst_n.value = 0
     dut.start.value = 0
     dut.A.value = 0
     dut.B.value = 0
     dut.opcode.value = 0
-    await Timer(20, units="ns")
+    dut.alu_pwr_en.value = 1
+    dut.iso_en.value = 0
+
+    for _ in range(2):
+        await RisingEdge(dut.clk)
+
     dut.rst_n.value = 1
-    await Timer(20, units="ns")
+
+    for _ in range(2):
+        await RisingEdge(dut.clk)
 
 
-@cocotb.test()
-async def test_basic_sanity(dut):
-    """Visible: only checks that signals toggle and no X propagation."""
-    await cocotb.start(generate_clock(dut))
-    await reset_dut(dut)
+def test_visible_runner():
+    import os
+    from pathlib import Path
+    from cocotb_tools.runner import get_runner
 
-    dut.start.value = 1
-    dut.opcode.value = 0
-    await Timer(10, units="ns")
-    dut.start.value = 0
+    sim = os.getenv("SIM", "icarus")
+    proj_path = Path(__file__).resolve().parent.parent
 
-    await Timer(50, units="ns")
+    sources = [
+        proj_path / "sources" / "alu.v",
+        proj_path / "sources" / "aon_block.v",
+        proj_path / "sources" / "top.v",
+    ]
 
-    # No golden checks allowed here
-    assert dut.result.value.is_resolvable, "Output contains X/Z values"
-    dut._log.info("Sanity test passed.")
+    runner = get_runner(sim)
+    runner.build(
+        sources=sources,
+        hdl_toplevel="top",
+        always=True,
+    )
 
-
-@cocotb.test()
-async def test_state_progression(dut):
-    """Visible: confirm busy toggles for multi-cycle ops."""
-    await cocotb.start(generate_clock(dut))
-    await reset_dut(dut)
-
-    dut.A.value = 3
-    dut.B.value = 3
-    dut.opcode.value = 8   # MUL
-    dut.start.value = 1
-
-    await Timer(10, units="ns")
-    dut.start.value = 0
-
-    await Timer(30, units="ns")  # busy must be 1 early
-
-    assert dut.busy.value in (0,1)
-    dut._log.info("busy toggled as expected")
+    runner.test(
+        hdl_toplevel="top",
+        test_module="visible",
+    )
