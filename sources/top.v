@@ -15,7 +15,6 @@ module top (
 );
 
     wire [15:0] alu_result;
-    wire        result_valid;
     wire        busy;
 
     reg  [15:0] alu_to_aon;
@@ -31,7 +30,6 @@ module top (
         .opcode(opcode),
         .start(start),
         .result(alu_result),
-        .result_valid(result_valid),
         .busy(busy)
     );
 
@@ -42,7 +40,7 @@ module top (
             alu_to_aon <= 16'd0;
         else if (!alu_pwr_en)
             alu_to_aon <= 16'd0;
-        else if (result_valid)
+        else
             alu_to_aon <= alu_result;
     end
 
