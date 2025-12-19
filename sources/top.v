@@ -33,22 +33,15 @@ module top (
         .busy(busy)
     );
 
-    /* ---------------- AON CAPTURE ----------------
-       - Simple ops (opcode < 8): capture on start
-       - MUL/DIV: capture when execution completes (busy deasserts)
-       - Clamp on iso_en or power-off
-    */
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n)
             alu_to_aon <= 16'd0;
-        else if (iso_en)
-            alu_to_aon <= 16'd0;
         else if (!alu_pwr_en)
-            alu_to_aon <= 16'd0;
-        else if (start && opcode < 4'b1000)
-            alu_to_aon <= alu_result;
-        else if (!busy && opcode >= 4'b1000)
-            alu_to_aon <= alu_result;
+            alu_to_aon <= 16'd0;        // BUG3 target
+        else if (iso_en)
+            alu_to_aon <= 16'd0;        // BUG2 target
+        else
+            alu_to_aon <= alu_result;   // NORMAL + BUG1 path
     end
 
     aon_block u_aon (
