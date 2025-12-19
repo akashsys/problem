@@ -1,4 +1,3 @@
-initial $display("USING TOP VERSION : 2025-01-ALU");
 
 `timescale 1ns/1ps
 module top (
@@ -16,6 +15,9 @@ module top (
     output [15:0] result
 );
 
+initial begin
+        $display("USING TOP VERSION : 2025-01-ALU");
+    end
     wire [15:0] alu_result;
     wire        busy;
 
