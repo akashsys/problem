@@ -1,71 +1,90 @@
-`timescale 1ns/1ps
+// ============================================================================
+// TOP MODULE  (INTENTIONALLY INCOMPLETE)
+// Agent must complete result propagation correctly
+// ============================================================================
+
 module top (
     input         clk,
     input         rst_n,
+
+    // ALU input controls
     input  [15:0] A,
     input  [15:0] B,
     input  [3:0]  opcode,
     input         start,
+
+    // Power control
     input         alu_pwr_en,
     input         iso_en,
     input         save,
     input         restore,
-    output [15:0] result
+
+    // Final visible output
+    output reg [15:0] result
 );
 
+    // Internal wires
     wire [15:0] alu_result;
     wire        result_valid;
     wire        busy;
 
-    reg  [15:0] alu_to_aon;
-    reg  [15:0] saved_result;
-
-    wire [15:0] data_out;
-
+    // =========================================================================
+    // ALU Instance (PD_ALU)
+    // =========================================================================
     alu u_alu (
         .clk(clk),
         .rst_n(rst_n),
-
         .alu_pwr_en(alu_pwr_en),
         .iso_en(iso_en),
         .save(save),
         .restore(restore),
-
         .A(A),
         .B(B),
         .opcode(opcode),
         .start(start),
-
         .result(alu_result),
         .result_valid(result_valid),
         .busy(busy)
     );
 
-    always @(posedge clk or negedge rst_n) begin
-        if (!rst_n)
-            saved_result <= 16'd0;
-        else if (save)
-            saved_result <= alu_result;  
-    end
-
-    always @(*) begin
-        if (restore)
-            alu_to_aon = saved_result;
-        else if (iso_en)
-            alu_to_aon = saved_result;
-        else if (!alu_pwr_en)
-            alu_to_aon = saved_result;
-        else
-            alu_to_aon = alu_result;
-    end
+    // =========================================================================
+    // Always-On Block (PD_AON)
+    // =========================================================================
+    wire [15:0] aon_data;
 
     aon_block u_aon (
         .clk(clk),
         .rst_n(rst_n),
-        .alu_out(alu_to_aon),
-        .data_out(data_out)
+        .alu_out(alu_result),
+        .data_out(aon_data)
     );
 
-    assign result = data_out;
+    // =========================================================================
+    // TODO SECTION (AGENT MUST FIX)
+    // =========================================================================
+
+    /*
+     * TODO-1:
+     * Decide WHEN result should update.
+     * Hint: result_valid is meaningful.
+     */
+
+    /*
+     * TODO-2:
+     * Ensure result does not update with invalid or X data.
+     */
+
+    /*
+     * TODO-3:
+     * Make sure power / isolation does not permanently zero the output.
+     */
+
+    // Intentionally broken logic
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n)
+            result <= 16'd0;
+        else
+            result <= result; // BUG: result never updates
+    end
 
 endmodule
