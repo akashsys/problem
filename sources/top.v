@@ -36,20 +36,13 @@ module top (
         .busy       (busy)
     );
 
-    // Power / isolation aware output logic (GOLDEN)
-       always @(posedge clk or negedge rst_n) begin
-        if (!rst_n)
-            result <= 16'd0;
-        else if (iso_en)
-            result <= clamp_value;
-        else if (!alu_pwr_en)
-            result <= clamp_value;
-        else
-            result <= alu_result;
-    end
-
+always @(posedge clk or negedge rst_n) begin
+    if (!rst_n)
+        result <= 16'd0;
+    else if (iso_en || !alu_pwr_en)
+        result <= clamp_value;
+    else
+        result <= alu_result;
+end
 
 endmodule
-
-
-
