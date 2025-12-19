@@ -67,9 +67,12 @@ module alu (
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n)
             result <= 16'd0;
+
         else if (!alu_pwr_en)
             result <= result;
-        else begin
+
+        /* Simple ops latch ONLY on start */
+        else if (start && state == IDLE) begin
             case (opcode)
                 4'b0000: result <= A + B;                      // ADD
                 4'b0001: result <= A - B;                      // SUB
@@ -79,12 +82,15 @@ module alu (
                 4'b0101: result <= ~(A | B);                   // NOR
                 4'b0110: result <= A << B[3:0];                // SLL
                 4'b0111: result <= ~(A ^ B);                   // XNOR
-                4'b1000: if (state == MUL_EXEC && cycle_cnt == 4)
-                             result <= A * B;                  // MUL
-                4'b1001: if (state == DIV_EXEC && cycle_cnt == 8)
-                             result <= (B != 0) ? A / B : 16'd0; // DIV
             endcase
         end
+
+        /* Multi-cycle ops latch on terminal cycle */
+        else if (opcode == 4'b1000 && state == MUL_EXEC && cycle_cnt == 4)
+            result <= A * B;                                   // MUL
+
+        else if (opcode == 4'b1001 && state == DIV_EXEC && cycle_cnt == 8)
+            result <= (B != 0) ? A / B : 16'd0;                // DIV
     end
 
 endmodule
