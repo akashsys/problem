@@ -1,3 +1,5 @@
+initial $display("USING TOP VERSION : 2025-01-ALU");
+
 `timescale 1ns/1ps
 module top (
     input         clk,
