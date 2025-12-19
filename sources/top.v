@@ -36,16 +36,11 @@ module top (
         .busy       (busy)
     );
 
-always @(*) begin
-    if (!rst_n)
-        result = 16'd0;
-    else if (iso_en)
-        result = clamp_value;
-    else if (!alu_pwr_en)
-        result = clamp_value;
-    else
-        result = alu_result;
-end
+assign result =
+    (!rst_n)        ? 16'd0 :
+    (iso_en)        ? clamp_value :
+    (!alu_pwr_en)   ? clamp_value :
+                      alu_result;
 
 endmodule
 
