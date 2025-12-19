@@ -21,6 +21,10 @@ module top (
     wire [15:0] alu_result;
     wire        busy;
 
+    reg  [15:0] alu_to_aon;
+    wire [15:0] data_out;
+
+    // ---------------- ALU ----------------
     alu u_alu (
         .clk(clk),
         .rst_n(rst_n),
@@ -34,8 +38,29 @@ module top (
         .busy(busy)
     );
 
-    // --------- GOLDEN PATH (NO AON INTERFERENCE) ---------
-    assign result = (iso_en || !alu_pwr_en) ? 16'd0 : alu_result;
+    // ---------------- PIPELINE FIX ----------------
+    // Capture ALU result AFTER it updates
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n)
+            alu_to_aon <= 16'd0;
+        else if (iso_en)
+            alu_to_aon <= 16'd0;          // BUG2 hook
+        else if (!alu_pwr_en)
+            alu_to_aon <= 16'd0;          // BUG3 hook
+        else
+            alu_to_aon <= alu_result;     // correct timing
+    end
+
+    // ---------------- AON ----------------
+    aon_block u_aon (
+        .clk(clk),
+        .rst_n(rst_n),
+        .alu_out(alu_to_aon),
+        .data_out(data_out)
+    );
+
+    assign result = data_out;
 
 endmodule
+
 
