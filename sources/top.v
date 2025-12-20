@@ -13,6 +13,7 @@ module top (
     input         iso_en,
 
     output reg [15:0] result
+    output [15:0] clamp_obs
 );
 
     wire [15:0] alu_result;
@@ -20,6 +21,7 @@ module top (
 
     // Clamp value
     wire [15:0] clamp_value;
+assign clamp_obs= clamp_value;
    
 
     // ALU instance
