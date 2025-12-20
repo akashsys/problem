@@ -11,6 +11,7 @@ module alu (
     input  [15:0] B,
     input  [3:0]  opcode,
     input         start,
+    input  [15:0] clamp_value,
 
     output reg [15:0] result,
     output            busy
@@ -34,7 +35,7 @@ module alu (
         else if (!alu_pwr_en || iso_en) begin
             state     <= IDLE;
             cycle_cnt <= 0;
-            result    <= result;
+            result    <= clamp_value;
         end
         else begin
             case (state)

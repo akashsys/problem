@@ -20,7 +20,7 @@ module top (
     wire        busy;
 
     wire [15:0] clamp_value;
-    
+    assign clamp_value= 16'd1;
     assign clamp_obs   = clamp_value;
 
     // ALU instance
@@ -41,7 +41,7 @@ module top (
         if (!rst_n)
             result = 16'd0;
         else if (iso_en)
-            result = clamp_value;
+            result = 0;
         else if (!alu_pwr_en)
             result = alu_result;
         else
