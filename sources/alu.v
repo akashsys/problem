@@ -31,10 +31,9 @@ module alu (
             result    <= 16'd0;
         end
         else if (!alu_pwr_en || iso_en) begin
-            // 🔴 CRITICAL FIX
             state     <= IDLE;
             cycle_cnt <= 0;
-            result    <= result;   // freeze output during clamp
+            result    <= result;
         end
         else begin
             case (state)
@@ -53,7 +52,7 @@ module alu (
                                     4'b0011: result <= A | B;
                                     4'b0100: result <= A ^ B;
                                     4'b0101: result <= ~(A | B);
-                                    4'b0110: result <= A << B[3:0];
+                                    4'b0110: result <= A >> B[3:0];
                                     4'b0111: result <= ~(A ^ B);
                                 endcase
                             end
