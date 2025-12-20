@@ -81,5 +81,3 @@ module alu (
     end
 
 endmodule
-
-
