@@ -140,9 +140,11 @@ CLAMP VALUE RULES
 
 \* Clamp is applied when iso\_en is high or alu\_pwr\_en is low
 
-\* When a power domain is OFF then the output must be a valid 0/1 and also must
+\* When a power domain is OFF(iso\_en high and alu\_pwr\_en low) then the output must be a valid 0/1 and also must
 
-match the value of the clamp defined. 
+match the value of the clamp value defined and if not defined must be set and makes sure output matches it when
+
+ALU domain is OFF.
 
 
 

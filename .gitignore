@@ -1,10 +1,4 @@
-# Simulation artifacts
-sim_build/
-
-# Python cache
 __pycache__/
 *.pyc
 .pytest_cache/
-
-# Test results
-*.xml
+sim_build/
