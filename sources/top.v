@@ -44,7 +44,7 @@ always @(*) begin
     else if (iso_en)
         result = 0;
     else if (!alu_pwr_en)
-        result = 0;
+        result = alu_result;
     else
         result = alu_result;
 end
