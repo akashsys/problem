@@ -34,7 +34,7 @@ module alu (
         else if (!alu_pwr_en || iso_en) begin
             state     <= IDLE;
             cycle_cnt <= 0;
-            result    <= |result;
+            result    <= 16'd0;
         end
         else begin
             case (state)
