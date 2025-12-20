@@ -1,5 +1,4 @@
 `timescale 1ns/1ps
-
 module alu (
     input         clk,
     input         rst_n,
@@ -15,6 +14,7 @@ module alu (
 
     output reg [15:0] result,
     output            busy
+
 );
 
     reg [1:0] state;
@@ -42,7 +42,7 @@ module alu (
 
                 IDLE: begin
                     cycle_cnt <= 0;
-                    if (start && alu_pwr_en && !iso_en) begin
+                    if (start) begin
                         case (opcode)
                             4'b1000: state <= MUL_EXEC;
                             4'b1001: state <= DIV_EXEC;
@@ -56,7 +56,6 @@ module alu (
                                     4'b0101: result <= ~(A | B);
                                     4'b0110: result <= A >> B[3:0];
                                     4'b0111: result <= ~(A ^ B);
-                                    default: result <= 16'd0;
                                 endcase
                             end
                         endcase
