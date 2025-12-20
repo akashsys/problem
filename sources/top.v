@@ -13,7 +13,7 @@ module top (
     input         iso_en,
 
     output reg [15:0] result
-    output [15:0] clamp_obs
+    output wire [15:0] clamp_obs
 );
 
     wire [15:0] alu_result;
