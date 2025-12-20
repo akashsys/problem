@@ -73,6 +73,14 @@ async def test_div(dut):
     await run_op(dut, 100, 4, 9, 11)
     assert int(dut.result.value) == 25
 
+@cocotb.test()
+async def test_sll_operation(dut):
+    await start_clock(dut)
+    await reset_dut(dut)
+
+    await run_op(dut, 1, 4, 6, 2)
+    assert int(dut.result.value) == (1 << 4)
+
 
 @cocotb.test()
 async def test_clamp_is_valid_value(dut):
@@ -82,9 +90,10 @@ async def test_clamp_is_valid_value(dut):
     dut.iso_en.value = 1
     await RisingEdge(dut.clk)
 
-    val = dut.result.value
+    val = dut.clamp_obs.value
     assert val.is_resolvable, "Clamp is X or Z"
-    assert int(val) in [0, 1], "Clamp value must be 0 or 1"
+    assert int(val) in [0, 1], "Clamp must be 0 or 1"
+
 
 
 @cocotb.test()
@@ -92,12 +101,13 @@ async def test_iso_en_clamps_output(dut):
     await start_clock(dut)
     await reset_dut(dut)
 
-    await run_op(dut, 9, 6, 0, 2)
-    await RisingEdge(dut.clk)
+    await run_op(dut, 9, 6, 0, 2)   # operation completes
+
     dut.iso_en.value = 1
     await RisingEdge(dut.clk)
 
-    assert int(dut.result.value) in [0, 1], "Result not clamped on iso_en"
+    assert int(dut.result.value) == int(dut.clamp_obs.value), \
+        "Result does not match clamp on iso_en"
 
 
 
@@ -106,13 +116,14 @@ async def test_power_down_clamps_output(dut):
     await start_clock(dut)
     await reset_dut(dut)
 
-    await run_op(dut, 8, 2, 0, 2)
-    await RisingEdge(dut.clk)
+    await run_op(dut, 8, 2, 0, 2)   # operation completes
 
     dut.alu_pwr_en.value = 0
     await RisingEdge(dut.clk)
 
-    assert int(dut.result.value) in [0, 1], "Result not clamped on power-down"
+    assert int(dut.result.value) == int(dut.clamp_obs.value), \
+        "Result does not match clamp on power-down"
+
 
 
 def test_alu_runner():
