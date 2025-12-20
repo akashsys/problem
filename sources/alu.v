@@ -31,10 +31,9 @@ module alu (
             result    <= 16'd0;
         end
         else if (!alu_pwr_en || iso_en) begin
-            // 🔴 CRITICAL FIX
             state     <= IDLE;
             cycle_cnt <= 0;
-            result    <= result;   // freeze output during clamp
+            result    <= result;
         end
         else begin
             case (state)
@@ -82,5 +81,3 @@ module alu (
     end
 
 endmodule
-
-
