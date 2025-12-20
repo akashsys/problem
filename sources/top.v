@@ -43,7 +43,7 @@ module top (
         else if (iso_en)
             result = clamp_value;
         else if (!alu_pwr_en)
-            result = clamp_value;
+            result = alu_result;
         else
             result = alu_result;
     end
