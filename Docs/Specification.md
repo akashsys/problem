@@ -140,6 +140,16 @@ CLAMP VALUE RULES
 
 \* Clamp is applied when iso\_en is high or alu\_pwr\_en is low
 
+\* When a power domain is OFF(iso\_en high and alu\_pwr\_en low) then the output must be a valid 0/1 and also must
+
+match the value of the clamp value defined and if not defined must be set and makes sure output matches it when
+
+ALU domain is OFF.
+
+
+
+
+
 
 
 OUTPUT PRIORITY
@@ -173,8 +183,4 @@ POWER-AWARE SEQUENCING ASSUMPTIONS
 VERIFICATION INTENT
 
 The golden design correctly enforces power-aware rules and clamp behavior. Buggy implementations may fail to initialize the clamp value, ignore isolation, or propagate ALU results during power-down. Tests are written such that all tests pass on the golden design and selected tests fail on incorrect implementations.
-
-
-
-
 

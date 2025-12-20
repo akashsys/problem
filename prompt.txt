@@ -1,9 +1,9 @@
 You are given an RTL design for a 16-bit Arithmetic Logic Unit (ALU) integrated
 into a low-power system. The design includes power-intent related control signals
-but the ALU RTL is intentionally incomplete and contains functional and
+but the ALU RTL and TOP containing this ALU module is incomplete and contains functional and
 power-management bugs.
 
-Your task is to complete and correct the ALU RTL so that it behaves exactly as
+Your task is to complete and correct the ALU RTL and TOP so that it behaves exactly as
 specified and passes all verification tests.
 
 DESIGN OVERVIEW
@@ -29,7 +29,7 @@ Single-cycle operations:
 - XOR : opcode 4'b0100 → A ^ B
 - NOR : opcode 4'b0101 → ~(A | B)
 - SLL : opcode 4'b0110 → A << B[3:0]
-- SLL : opcode 4'b0111 → A << B[3:0]
+- XNOR : opcode 4'b0111 → ~(A ^ B)
 
 Multi-cycle operations:
 - MUL : opcode 4'b1000 → A * B (requires multiple cycles)
@@ -53,31 +53,19 @@ Controls output isolation.
 When HIGH:
 - All externally visible ALU outputs must be forced to a safe value (0).
 
-- save / restore:
-Represent state-retention intent.
-These signals are present but simplified at RTL level.
-
 KNOWN ISSUES IN THE INCOMPLETE DESIGN
 -------------------------------------
-The provided ALU RTL is incomplete and incorrect in several ways:
-
-1. Power gating behavior is partially implemented or missing.
-2. FSM state and cycle counters may advance incorrectly during power-off.
-3. Output isolation may exist internally but not affect final outputs.
-4. Multi-cycle operations may produce invalid results if power is disabled
-mid-execution.
-5. Result_valid and busy signaling may glitch or assert incorrectly.
+The provided ALU RTL is incomplete and incorrect in several ways that produces functional and power-related bugs.
 
 YOUR TASK
 ---------
-Modify ONLY the ALU RTL to fix all functional and power-related issues. Pick the incomplete file from sources/top.v. 
+Find the bugs amd modify the ALU RTL(alu.v) and TOP level(top.v) to fix all functional and power-related issues. Pick the incomplete file from sources/top.v and sources/alu.v
 
 You must ensure:
 - Correct functional results for all opcodes.
 - Clean handling of power enable / disable events.
 - No spurious outputs during isolation.
-- Deterministic behavior across power transitions.
-- Multi-cycle operations complete correctly or are safely aborted.
+
 
 CONSTRAINTS
 -----------
