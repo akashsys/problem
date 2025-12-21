@@ -2,57 +2,77 @@
 
 
 
-OVERVIEW
-
-The Arithmetic Logic Unit (ALU) is a synchronous digital block that performs arithmetic and logical operations on two 16-bit operands. The design also models power-aware behavior using explicit power enable and isolation signals. This allows verification of correct functionality during normal operation, power-down, and isolation scenarios, similar to low-power SoC designs using UPF concepts.
+**OVERVIEW**
 
 
 
-INPUTS AND OUTPUTS
+The Arithmetic Logic Unit (ALU) is a synchronous digital block that performs arithmetic and logical operations on two 16-bit operands.
 
-Inputs to the design are:
+The design models POWER-AWARE BEHAVIOR using CLOCK DISCONNECTION AND OUTPUT CLAMPING, similar to low-power SoC designs that use UPF concepts such as power gating and isolation.
 
 
 
-\* clk: system clock driving all sequential logic
+Power-aware behavior is implemented OUTSIDE THE ALU, keeping the ALU itself purely functional.
 
-\* rst\_n: active-low reset
+
+
+---
+
+
+
+**INPUTS AND OUTPUTS**
+
+
+
+Inputs to the design:
+
+
+
+\* CLK: system clock driving all sequential logic
+
+\* RST\_N: active-low reset
 
 \* A: 16-bit operand input
 
 \* B: 16-bit operand input
 
-\* opcode: 4-bit control selecting the ALU operation
+\* OPCODE: 4-bit control selecting the ALU operation
 
-\* start: initiates an ALU operation
+\* START: initiates an ALU operation
 
-\* alu\_pwr\_en: indicates whether the ALU power domain is enabled
-
-\* iso\_en: enables isolation between the ALU and the output domain
+\* DISS\_CLK: active-high control signal that disconnects the ALU clock (models ALU power-off)
 
 
 
-Outputs from the design are:
+**Outputs from the design:**
 
 
 
-\* result: 16-bit ALU output after power and isolation handling
+\* RESULT: 16-bit ALU output after power-aware handling
 
-\* busy: indicates that the ALU is executing a multi-cycle operation
+\* BUSY: indicates that the ALU is executing a multi-cycle operation
+
+\* CLAMP\_OBS: observation port exposing the clamp value used during power-off
 
 
 
-FUNCTIONAL BEHAVIOR
+---
+
+
+
+**FUNCTIONAL BEHAVIOR**
+
+
 
 The ALU performs arithmetic and logical operations based on the opcode.
 
 
 
-\* Operations begin when start is asserted while the ALU is idle
+\* Operations begin when START is asserted while the ALU is idle
 
-\* The ALU does not accept new operations while busy is high
+\* The ALU does not accept new operations while BUSY is high
 
-\* Results are produced only when the ALU is powered on and not isolated
+\* Results are produced only when the ALU clock is supplied
 
 
 
@@ -78,109 +98,127 @@ Multi-cycle operations include:
 
 
 
-Multi-cycle operations hold the ALU in a busy state for a fixed number of clock cycles before producing a result.
+Multi-cycle operations hold the ALU in a BUSY state for a fixed number of clock cycles before producing a result.
 
 
 
-RESET BEHAVIOR
+---
 
-Reset has the highest priority in the design.
 
 
+**POWER-AWARE BEHAVIOR**
 
-\* When rst\_n is low, internal state machines return to idle
 
-\* Cycle counters are cleared
 
-\* The output result is forced to zero
+Power-aware behavior is modeled using CLOCK DISCONNECTION.
 
-\* Reset overrides power enable and isolation signals
 
 
+\* DISS\_CLK = 1 indicates that the ALU power domain is OFF
 
-POWER BEHAVIOR
+\* When DISS\_CLK is high:
 
-The alu\_pwr\_en signal models the power state of the ALU domain.
 
 
+&nbsp; \* The ALU clock is disconnected
 
-\* When alu\_pwr\_en is low, the ALU is considered powered down
+&nbsp; \* ALU internal state is frozen
 
-\* ALU internal execution is disabled
+&nbsp; \* No ALU computation occurs
 
-\* The ALU state machine is forced to idle
+&nbsp; \* The ALU output MUST NOT propagate to the top-level result
 
-\* The output result must be clamped to a safe value
 
 
+Clock disconnection models power gating at RTL abstraction.
 
-ISOLATION BEHAVIOR
 
-The iso\_en signal models isolation between power domains.
 
+---
 
 
-\* When iso\_en is high, the ALU output must not propagate to the result
 
-\* Isolation blocks functional values regardless of ALU activity
+**OUTPUT CLAMPING BEHAVIOR**
 
-\* The output result must be driven to the clamp value
 
 
+Output isolation is implemented using a MUX-BASED CLAMP in the top-level logic.
 
-CLAMP VALUE RULES
 
 
+\* A constant CLAMP VALUE is defined in the top-level logic
 
-\* A constant clamp value is defined in the top-level logic
+\* CLAMP\_OBS exposes the clamp value for verification
 
-\* The clamp value must always resolve to a known value (0 or 1)
+\* When DISS\_CLK = 1, the output RESULT MUST BE CLAMPED
 
-\* The clamp value must never be X or Z
+\* When DISS\_CLK = 0, the output RESULT reflects ALU computation
 
-\* Clamp is applied when iso\_en is high or alu\_pwr\_en is low
 
-\* When a power domain is OFF(iso\_en high and alu\_pwr\_en low) then the output must be a valid 0/1 and also must
 
-match the value of the clamp value defined and if not defined must be set and makes sure output matches it when
+Clamp value rules:
 
-ALU domain is OFF.
 
 
+\* Clamp value must always resolve to a known value (0 or 1)
 
+\* Clamp value must never be X or Z
 
+\* When the ALU domain is OFF, RESULT MUST EXACTLY MATCH CLAMP\_OBS
 
+\* Missing or undriven clamp logic is considered a FUNCTIONAL BUG
 
 
-OUTPUT PRIORITY
 
-The output result follows this priority order:
+---
 
 
 
-\* Reset
+**OUTPUT PRIORITY**
 
-\* Isolation enable
 
-\* Power-down
 
-\* Normal functional operation
+The output RESULT follows this priority order:
 
 
 
-POWER-AWARE SEQUENCING ASSUMPTIONS
+1\. Reset
 
+2\. Clock disconnection (DISS\_CLK)
 
+3\. Normal functional operation
 
-\* Isolation and power-down are applied only when the ALU is idle
 
-\* Mid-operation power or isolation transitions are not supported
 
-\* Verification tests ensure no overlap between ALU execution cycles and power control changes
+---
 
 
 
-VERIFICATION INTENT
+**VERIFICATION INTENT**
 
-The golden design correctly enforces power-aware rules and clamp behavior. Buggy implementations may fail to initialize the clamp value, ignore isolation, or propagate ALU results during power-down. Tests are written such that all tests pass on the golden design and selected tests fail on incorrect implementations.
+
+
+The golden design correctly enforces:
+
+
+
+\* Functional correctness of ALU operations
+
+\* Clock-disconnect behavior during power-off
+
+\* Deterministic and resolvable clamp behavior
+
+\* Correct matching between RESULT and CLAMP\_OBS when power is OFF
+
+
+
+Tests are written such that:
+
+
+
+\* All tests pass on the golden design
+
+\* Selected tests fail on incorrect implementations
+
+
 

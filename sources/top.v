@@ -1,5 +1,4 @@
 `timescale 1ns/1ps
-
 module top (
     input         clk,
     input         rst_n,
@@ -9,44 +8,45 @@ module top (
     input  [3:0]  opcode,
     input         start,
 
-    input         alu_pwr_en,
-    input         iso_en,
+    input         diss_clk,
 
-    output reg [15:0] result,
+    output reg  [15:0] result,
     output wire [15:0] clamp_obs
 );
 
     wire [15:0] alu_result;
     wire        busy;
+    wire        alu_clk;
 
-    // Clamp value
     wire [15:0] clamp_value;
-    assign clamp_obs= clamp_value;
-   
+    
+    assign clamp_obs   = clamp_value;
 
-    // ALU instance
-    alu u_alu (
-        .clk        (clk),
-        .rst_n      (rst_n),
-        .alu_pwr_en (alu_pwr_en),
-        .iso_en     (iso_en),
-        .A          (A),
-        .B          (B),
-        .opcode     (opcode),
-        .start      (start),
-        .result     (alu_result),
-        .busy       (busy)
+    alu_clk_off u_clk_off (
+        .clk      (clk),
+        .diss_clk (diss_clk),
+        .alu_clk  (alu_clk)
     );
 
-always @(*) begin
-    if (!rst_n)
-        result = 16'd0;
-    else if (iso_en)
-        result = 0;
-    else if (!alu_pwr_en)
-        result = alu_result;
-    else
-        result = alu_result;
-end
+    alu u_alu (
+        .clk    (alu_clk),
+        .rst_n  (rst_n),
+        .A      (A),
+        .B      (B),
+        .opcode (opcode),
+        .start  (start),
+        .result (alu_result),
+        .busy   (busy)
+    );
+
+    always @(*) begin
+        if (!rst_n)
+            result = 16'd0;
+        else if (diss_clk)
+            result = alu_result;
+        else
+            result = alu_result;
+    end
 
 endmodule
+

@@ -1,88 +1,129 @@
 You are given an RTL design for a 16-bit Arithmetic Logic Unit (ALU) integrated
-into a low-power system. The design includes power-intent related control signals
-but the ALU RTL and TOP containing this ALU module is incomplete and contains functional and
-power-management bugs.
+into a low-power system. The design models power-aware behavior using clock
+disconnection and output clamping. The ALU RTL and the top module containing
+this ALU are incomplete and contain functional and power-management bugs.
 
-Your task is to complete and correct the ALU RTL and TOP so that it behaves exactly as
-specified and passes all verification tests.
+Your task is to complete and correct the ALU RTL and the top module so that the
+design behaves exactly as specified and passes all verification tests.
 
-DESIGN OVERVIEW
+Design Overview
 ---------------
 The system consists of:
-1. A top-level module that instantiates:
-- An always-on (AON) block
-- A power-gated ALU block
-2. The ALU supports both single-cycle and multi-cycle operations.
-3. Power-intent signals are modeled at RTL level to mimic real low-power design
-behavior.
 
-ALU FUNCTIONALITY
+1. A top-level module that instantiates:
+   - A clock-disconnect (off-domain) block
+   - A power-gated ALU block
+
+2. The ALU supports both single-cycle and multi-cycle operations.
+
+3. Power-aware behavior is modeled at RTL level to mimic real low-power SoC
+design concepts such as power gating and isolation.
+
+ALU Functionality
 -----------------
 The ALU operates on two 16-bit operands A and B and supports the following
-operations selected by a 4-bit opcode:
+operations selected by a 4-bit opcode.
 
 Single-cycle operations:
-- ADD : opcode 4'b0000 → A + B
-- SUB : opcode 4'b0001 → A - B
-- AND : opcode 4'b0010 → A & B
-- OR : opcode 4'b0011 → A | B
-- XOR : opcode 4'b0100 → A ^ B
-- NOR : opcode 4'b0101 → ~(A | B)
-- SLL : opcode 4'b0110 → A << B[3:0]
+- ADD  : opcode 4'b0000 → A + B
+- SUB  : opcode 4'b0001 → A - B
+- AND  : opcode 4'b0010 → A & B
+- OR   : opcode 4'b0011 → A | B
+- XOR  : opcode 4'b0100 → A ^ B
+- NOR  : opcode 4'b0101 → ~(A | B)
+- SLL  : opcode 4'b0110 → A << B[3:0]
 - XNOR : opcode 4'b0111 → ~(A ^ B)
 
 Multi-cycle operations:
-- MUL : opcode 4'b1000 → A * B (requires multiple cycles)
-- DIV : opcode 4'b1001 → A / B (requires multiple cycles)
+- MUL  : opcode 4'b1000 → A * B (requires multiple cycles)
+- DIV  : opcode 4'b1001 → A / B (requires multiple cycles)
 
-The ALU uses an internal FSM to manage multi-cycle operations.
+The ALU uses an internal FSM to manage multi-cycle operations and asserts a
+busy signal while execution is in progress.
 
-POWER-INTENT SIGNALS
---------------------
-The ALU includes the following power-related control signals:
+Power-Intent Signal
+-------------------
+The design includes the following power-related control signal:
 
-- alu_pwr_en:
-Indicates whether the ALU is powered ON.
-When LOW:
-- The ALU must not start new operations.
-- Internal state must not advance.
-- Outputs must not glitch or become invalid.
+diss_clk
 
-- iso_en:
-Controls output isolation.
-When HIGH:
-- All externally visible ALU outputs must be forced to a safe value (0).
+The diss_clk signal models the power state of the ALU domain using clock
+disconnection.
 
-KNOWN ISSUES IN THE INCOMPLETE DESIGN
+When diss_clk is high:
+- The clock to the ALU is disconnected
+- The ALU internal state must not advance
+- No new operations may start
+- ALU functional output must not propagate to the top-level result
+
+When diss_clk is low:
+- The ALU clock is supplied
+- Normal functional operation is allowed
+
+Clock disconnection models power gating at RTL abstraction level.
+
+Output Clamping Behavior
+------------------------
+When the ALU domain is powered off (diss_clk high), the top-level logic must
+clamp the output to a safe value.
+
+- A constant clamp value is defined in the top module
+- The clamp value must always be a valid 0 or 1
+- The clamp value must never be X or Z
+- When diss_clk is high, the output result must match the clamp value
+- Clamping is implemented using a mux in the top module
+
+An observation port (clamp_obs) is provided to allow verification of the clamp
+value.
+
+Missing or incorrect clamping is considered a power-intent bug.
+
+Reset Behavior
+--------------
+Reset has the highest priority in the design.
+
+- When rst_n is low, the ALU returns to idle
+- Internal counters are cleared
+- The output result is forced to zero
+- Reset is effective even when the ALU clock is disconnected
+
+Known Issues in the Incomplete Design
 -------------------------------------
-The provided ALU RTL is incomplete and incorrect in several ways that produces functional and power-related bugs.
+The provided RTL contains multiple issues, including but not limited to:
 
-YOUR TASK
+- Missing or incorrect output clamping
+- Undriven or invalid clamp values
+- Incorrect handling of clock disconnection
+- Functional bugs in ALU operations
+- Improper FSM behavior for multi-cycle operations
+
+Your Task
 ---------
-Find the bugs amd modify the ALU RTL(alu.v) and TOP level(top.v) to fix all functional and power-related issues. Pick the incomplete file from sources/top.v and sources/alu.v
+Find the bugs and modify the ALU RTL (sources/alu.v) and the top module
+(sources/top.v) to fix all functional and power-related issues.
 
 You must ensure:
-- Correct functional results for all opcodes.
-- Clean handling of power enable / disable events.
-- No spurious outputs during isolation.
+- Correct functional results for all opcodes
+- Clean handling of clock disconnection events
+- No X or Z propagation during power-off
+- Output is properly clamped when the ALU domain is off
 
-
-CONSTRAINTS
+Constraints
 -----------
-- Do NOT modify module interfaces.
-- Do NOT add or remove ports.
-- Do NOT change testbench files.
-- Do NOT remove power-intent signals.
-- Do NOT use non-synthesizable constructs.
+- Do not modify module interfaces
+- Do not add or remove ports
+- Do not change testbench files
+- Do not use non-synthesizable constructs
 
-GRADING
+Grading
 -------
 Your solution will be evaluated using hidden tests that:
-- Compare outputs against a golden reference implementation.
-- Toggle power and isolation signals at different times.
-- Stress multi-cycle operation boundaries.
+- Compare outputs against a golden reference
+- Toggle diss_clk at different times
+- Verify clamp correctness and resolvability
+- Stress multi-cycle operation boundaries
 
-DELIVERABLE
+Deliverable
 -----------
-A corrected ALU RTL implementation that matches the specified behavior and
-passes all hidden tests
+A corrected ALU RTL and top-level implementation that matches the specified
+behavior and passes all hidden tests.
