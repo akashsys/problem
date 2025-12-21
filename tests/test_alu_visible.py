@@ -13,13 +13,17 @@ async def visible_init(dut):
     dut.A.value = 0
     dut.B.value = 0
     dut.opcode.value = 0
-    dut.alu_pwr_en.value = 1
-    dut.iso_en.value = 0
+    dut.diss_clk.value = 0
 
     for _ in range(2):
         await RisingEdge(dut.clk)
 
     dut.rst_n.value = 1
+
+    for _ in range(2):
+        await RisingEdge(dut.clk)
+
+    dut.diss_clk.value = 1
 
     for _ in range(2):
         await RisingEdge(dut.clk)
@@ -35,7 +39,7 @@ def test_visible_runner():
 
     sources = [
         proj_path / "sources" / "alu.v",
-        proj_path / "sources" / "aon_block.v",
+        proj_path / "sources" / "alu_clk_off.v",
         proj_path / "sources" / "top.v",
     ]
 
