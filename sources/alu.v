@@ -3,18 +3,13 @@ module alu (
     input         clk,
     input         rst_n,
 
-    input         alu_pwr_en,
-    input         iso_en,
-
     input  [15:0] A,
     input  [15:0] B,
     input  [3:0]  opcode,
     input         start,
-    input  [15:0] clamp_value,
 
     output reg [15:0] result,
     output            busy
-
 );
 
     reg [1:0] state;
@@ -32,14 +27,8 @@ module alu (
             cycle_cnt <= 0;
             result    <= 16'd0;
         end
-        else if (!alu_pwr_en || iso_en) begin
-            state     <= IDLE;
-            cycle_cnt <= 0;
-            result    <= clamp_value;
-        end
         else begin
             case (state)
-
                 IDLE: begin
                     cycle_cnt <= 0;
                     if (start) begin
@@ -77,7 +66,6 @@ module alu (
                         state  <= IDLE;
                     end
                 end
-
             endcase
         end
     end
