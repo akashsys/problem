@@ -34,14 +34,15 @@ module top (
         .opcode     (opcode),
         .start      (start),
         .result     (alu_result),
-        .busy       (busy)
+        .busy       (busy),
+        .clamp_value(clamp_value)
     );
 
     always @(*) begin
         if (!rst_n)
             result = 16'd0;
         else if (iso_en)
-            result = 0;
+            result = 16'd0;
         else if (!alu_pwr_en)
             result = alu_result;
         else
@@ -49,3 +50,4 @@ module top (
     end
 
 endmodule
+
