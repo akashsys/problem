@@ -20,7 +20,7 @@ module top (
     wire        busy;
 
     wire [15:0] clamp_value;
-    assign clamp_value = 16'd0;
+    assign clamp_value = 16'd1;
     assign clamp_obs   = clamp_value;
 
     // ALU instance
@@ -34,7 +34,8 @@ module top (
         .opcode     (opcode),
         .start      (start),
         .result     (alu_result),
-        .busy       (busy)
+        .busy       (busy),
+        .clamp_value(clamp_value)
     );
 
     always @(*) begin
